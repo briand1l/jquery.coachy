@@ -1,22 +1,24 @@
 <html>
 	<head>
-		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.js"></script>
+		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.js"></script>
 		<script type="text/javascript" src="http://github.com/DmitryBaranovskiy/raphael/raw/master/raphael-min.js"></script>
 		<script type="text/javascript" src="jquery.coachy.js"></script>
 		<script>
-			$( function() {
-				$("#test").coachy({
-					on: "custom",
-					message: "If you click there you'll see",
-					theme: "white",
-					arrow: {
-						x1: $(window).width()/2,
-						y1: $(window).height()/2,
-						x2: 30,
-						y2: 30 
-					}
-				});
-				/*
+		    $(function () {
+		        $(".hasCoach").coachy({
+		            on: "mouseover",
+		            off: "mouseout",
+		            message: "If you click there you'll see",
+		            theme: "white",
+		            arrow: {
+		                x1: $(window).width() / 2,
+		                y1: $(window).height() / 2
+		                //x2: 30,
+		                //y2: 30 
+		            },
+		            zindex:99
+		        });
+		        /*
 				 $("#test").coachy({
 				 on: "custom",
 				 off: "mouseout",
@@ -30,15 +32,51 @@
 				 });
 				 */
 
-				setInterval( function() {
-					$(document).trigger("custom");
-				},200);
-			});
+		        //setTimeout( function() {
+		        //	$('#test').trigger("custom");
+		        //},200);
+		    });
 		</script>
+        <style>
+
+            .hasCoach
+            {
+                opacity:1;
+            }
+            .hasCoach span
+            {
+                display:inline-block;
+                width:50%;
+                height:100%;
+                background-color:#0026ff;
+            }
+            
+        </style>
 	</head>
 	<body>
-		<div id="test">
-			Click me to remove coach mark!
+		<div class="hasCoach" style="background-color:#ffd800;width:250px;position:absolute;top:10px;left:50px;height:200px;">
+			<span>Hover here</span>
+		</div>
+        <div class="hasCoach" style="background-color:#ffd800;width:250px;position:absolute;top:80%;left:50px;">
+			<span>Hover here</span>
+		</div>
+        <div class="hasCoach" style="background-color:#ffd800;width:250px;position:absolute;top:10px;left:48%;">
+			<span>Hover here</span>
+		</div>
+         <div class="hasCoach" style="background-color:#ffd800;width:250px;position:absolute;top:45%;left:10px;height:200px;">
+			<span>Hover here</span>
+		</div>
+        <div class="hasCoach" style="background-color:#ffd800;width:250px;position:absolute;top:80%;left:85%;">
+			<span>Hover here</span>
+		</div>
+        <div class="hasCoach" style="background-color:#ffd800;width:250px;position:absolute;top:10px;left:85%;">
+			<span>Hover here</span>
+		</div>
+        <div class="hasCoach" style="background-color:#ffd800;width:250px;position:absolute;top:96%;left:48%;">
+			<span>Hover here</span>
+		</div>
+        <div class="hasCoach" style="background-color:#ffd800;width:250px;position:absolute;top:45%;left:85%;height:150px;">
+			<span>Hover here</span>
 		</div>
 	</body>
 </html>
