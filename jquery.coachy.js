@@ -20,45 +20,8 @@
         return;
     }
 
-    // RaphaelJS Extensions:
-
-    Raphael.fn.arrow = function (x1, y1, x2, y2, x3, y3, size, stroke) {
-        var cx1 = 0, cy1 = 0, cx2 = 0, cy2 = 0;
-        var curve = 200;
-        if (x1 > x2 && y1 > y2) { //arrow diag from bottom right to top left 
-            cx1 = x1 - curve; cy1 = y1; cx2 = x2;
-            if (y3 > y1) cy2 = y2 - curve;
-            else cy2 = y2 + curve;
-        } else if (x1 < x2 && y1 < y2) { //arrow diag from top left to bottom right 
-            cx1 = x1 + curve; cy1 = y1; cx2 = x2; cy2 = y2 - curve;
-        } else if (x1 > x2 && y1 < y2) { //arrow diag from top right to bottom left
-            cx1 = x1 - curve; cy1 = y1; cx2 = x2; cy2 = y2 - curve;
-        } else if (x1 < x2 && y1 > y2) { //arrow diag from bottom left to top right 
-            cx1 = x1 + curve; cy1 = y1; cx2 = x2;
-            if (y3 > y1) cy2 = y2 - curve;
-            else cy2 = y2 + curve;
-        } else if (y1 == y2 && x1 != x2) { //straight horizontal line
-            cx1 = x1; cy1 = y1 - 100; cx2 = x2; cy2 = y2 - 100;
-        } else if (y1 != y2 && x1 == x2) { //straight vertical line
-            cx1 = x1 + 100; cy1 = y1; cx2 = x2 + 100; cy2 = y2;
-        } else if (y1 == y2 && x1 == x2) { //dot
-            cx1 = x1; cy1 = y1; cx2 = x2; cy2 = y2;
-        }
-
-        var linePath = this.path("M" + x1 + " " + y1 + " C" + cx1 + " " + cy1 + " " + cx2 + " " + cy2 + " " + x2 + " " + y2).attr({ "stroke-width": "1px", stroke: stroke });
-        var point = linePath.getPointAtLength(linePath.getTotalLength() - 10);
-        var angle = Raphael.angle(point.x, point.y, x2, y2);
-        var arrowPath = this.path(
-                        "M" + x2 + " " + y2 +
-                        " L" + ((x2 - 10) - (size * 2)) + " " + (y2 - (size * 2)) +
-                        " L" + ((x2 - 10) - (size * 2)) + " " + (y2 + (size * 2)) +
-                        " L" + x2 + " " + y2
-                        )
-                        .rotate((angle + 180), x2, y2)
-                        .attr({ "fill": stroke, "stroke": stroke, "stroke-width": "1px" });
-        return [linePath, arrowPath];
-    }
-
+    // RaphaelJS Extension:
+    // show arrow from [origin]:(point) to [$elm]:(jQuery wrapped DOM Element), with arrow head [size] and line [stoke] width
     Raphael.fn.arrowForElement = function (origin, $elm, size, stroke) {
         var cx1 = 0, cy1 = 0, cx2 = 0, cy2 = 0
         var curve = 200;
@@ -100,6 +63,7 @@
         return { finalX: x1, finalY: y1, linePath: linePath, arrowPath: arrowPath };
     }
 
+    // where to point the arrow if the object is a box?
     $.fn.getPointingSpotForBox = function ($elem, arrowOriginX, arrowOriginY, customOffset) {
         // measuring element
         var elmOffset = $elem.offset();
@@ -155,8 +119,8 @@
             var id = "__jquerycoachy__" + parseInt(Math.random() * 10);
             // defaults:
             var defaults = {
-                on: null,//"mouseover",
-                off: null,//"mouseout",
+                on: "customEventIn",
+                off: "customEventOut",
                 arrow: {
                     x1: $(window).width() / 2,
                     y1: $(window).height() / 2
@@ -165,7 +129,9 @@
                 opacity: 0.8,
                 theme: "white",
                 message: "jQuery Coachy!",
-                bringToFront: true,
+                bringToFront: true, // bring element to front with z-index
+                autoOpen: false,
+                life: 0 // 0(ms) => stays forever
             };
             //options extend defaults
             var options = $.extend(defaults, options);
@@ -195,7 +161,7 @@
                 //injected
                 $("body").append(div);
                 //fadeIn
-                div.animate({ opacity: options.opacity }, 500);
+                div.data('initialopacity',div.css('opacity')).stop().animate({ opacity: options.opacity }, 500);
 
                 var $elm = $(this);
                 if (options.bringToFront) {
@@ -222,24 +188,48 @@
                     fill: options.theme
                 });
 
-                // bind off event to hide
+                // unbind on event
                 $(this).off(options.on);
                 $("#" + id + " > svg").css("pointer-events", " none");
+
+                // has limited lifetime?
+                if (options.life > 0) {
+                    console.log('has lifetime:'+options.life);
+                    var $plugin = $(this);
+                    // autoHide clear function: cleartimeout so that it doesnt conflict with other dispatches of the "off" event
+                    var autoHideClear = function () {
+                        console.log('autoHideClear!');
+                        clearTimeout(autoHideTO);
+                        $plugin.off(options.off, autoHideClear);
+                    }
+                    // clear lifetime layout 
+                    $plugin.on(options.off, autoHideClear);
+                    // setTimeout to hide when lifetime runs out
+                    var autoHideTO = setTimeout(function () {
+                        console.log('autoHideTimeOut called!');
+                        $plugin.trigger(options.off)
+                    },options.life)
+                }
             });
 
-            // bind events to hide jquery coachy
+            // autoOpen?
+            if (options.autoOpen) {
+                this.trigger(options.on);
+            }
+
+            // return
             return this.each(function () {
                 var o = options;
                 var obj = $(this);
-                // if an "off" event is passed
-                if (options.off) {
-                    obj.bind(o.off, function (e) {
+                obj.on(o.off, function (e) {
+                    $("#" + id).stop().animate({ opacity: $("#" + id).data('initialopacity') }, 500, function () {
                         if (o.bringToFront) {
                             obj.css('z-index', obj.attr('data-z-index'));
                         }
-                        $("#" + id).remove();
+                        $(this).remove();
                     });
-                }
+                    
+                });
                 // to close Coachy on ESC Key
                 $(document).bind("keypress", function (e) {
                     var code = (e.keyCode ? e.keyCode : e.which);
