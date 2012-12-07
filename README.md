@@ -13,3 +13,15 @@ Create simple Coachy on an element:
 		            message: "If you click there you'll see",
 		        });
 ```
+
+## AutoOpen with LifeTime
+
+Create simple Coachy on an element that is opened upon instantiation:
+
+```js
+    $("#thaButton").coachy({
+		            message: "Welcome, click here to begin",
+					autoOpen: true,
+					life: 5000
+		        });
+```
