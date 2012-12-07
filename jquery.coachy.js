@@ -20,6 +20,8 @@
         return;
     }
 
+    // RaphaelJS Extensions:
+
     Raphael.fn.arrow = function (x1, y1, x2, y2, x3, y3, size, stroke) {
         var cx1 = 0, cy1 = 0, cx2 = 0, cy2 = 0;
         var curve = 200;
@@ -149,39 +151,37 @@
 
     $.fn.extend({
         coachy: function (options) {
+            // UID for jQueryCoachy
             var id = "__jquerycoachy__" + parseInt(Math.random() * 10);
+            // defaults:
             var defaults = {
-                on: "click",
-                off: "mouseover",
+                on: null,//"mouseover",
+                off: null,//"mouseout",
                 arrow: {
                     x1: $(window).width() / 2,
                     y1: $(window).height() / 2
-                    //x2: 30,
-                    //y2: 30
                 },
                 zindex: "-999999",
                 opacity: 0.8,
                 theme: "white",
-                message: "Hey there!"
+                message: "jQuery Coachy!",
+                bringToFront: true,
             };
-
+            //options extend defaults
             var options = $.extend(defaults, options);
+            //reference to plugin:
+            var plugin = this;
 
+
+            // Coachy is binded to the elements
+
+            // bind event to show coachy on "option.on events" on elements
             $(document).on(options.on, this.selector, function () {
                 var x1 = options.arrow.x1,
                     y1 = options.arrow.y1;
-                //    x2, y2;
-                //if (options.arrow.x2 && options.arrow.y2) {
-                //    x2 = options.arrow.x2;
-                //    y2 = options.arrow.y2;
-                //} else {
-                //    perfectPos = $.fn.getPointingSpotForBox($(this), options.arrow.x1, options.arrow.y1, 15);
-                //    x2 = perfectPos.x;
-                //    y2 = perfectPos.y;
-                //}
                 var windowX = $(window).width();
                 var windowY = $(window).height();
-
+                // coachy div
                 var div = $("<div />").attr("id", id);
                 div.css({
                     "position": "absolute",
@@ -192,30 +192,29 @@
                     "opacity": 0,
                     "pointer-events": " none"
                 });
-
+                //injected
                 $("body").append(div);
+                //fadeIn
                 div.animate({ opacity: options.opacity }, 500);
 
                 var $elm = $(this);
-                $elm.attr('data-z-index',$elm.css('z-index'));
-                $elm.css('z-index', options.zindex + 10);
+                if (options.bringToFront) {
+                    $elm.attr('data-z-index', $elm.css('z-index'));
+                    $elm.css('z-index', options.zindex + 10);
+                }
+                // raphaelJS canvas
                 var paper = new Raphael(document.getElementById(id), windowX, windowY);
-                //paper.arrow(
-                //    x1, y1,
-                //    x2, y2,
-                //    _left + $elm.outerWidth(),
-                //    _top + $elm.outerHeight(),                    
-                //    5, options.theme);
+                //draw arrow
                 var finalArrow = paper.arrowForElement(
                     /*arrow*/{ x: x1, y: y1 },
-                    /*elementBox*/$elm,                        
-                    //},
+                    /*elementBox*/$elm,
                     5, options.theme);
 
-
+                // text optimal offset
                 var offsetX = (x1 < finalArrow.finalX) ? offsetX = -30 : offsetX = 30;
                 var offsetY = (y1 < finalArrow.finalY) ? offsetY = -30 : offsetY = 30;
 
+                // show text
                 paper.text(x1 + offsetX, y1 + offsetY, options.message).attr({
                     font: "Helvetica",
                     "font-size": "25px",
@@ -223,39 +222,25 @@
                     fill: options.theme
                 });
 
-                var esc;
-                var interval;
-                //$(document).mousemove(function() {
-                //	if (!esc || esc == null) {
-                //		clearInterval(interval);
-                //		esc = paper.text(windowX - 100, windowY - 70, "Esc to dismiss").attr({
-                //			font:"Helvetica",
-                //			"font-size": "20px",
-                //			stroke: options.theme,
-                //			fill: options.theme
-                //		});
-
-                //		interval = setInterval(function(){
-                //			if (esc) {
-                //				esc.remove();
-                //				esc = null;
-                //			}
-                //		}, 5000);
-                //	}
-                //});
-
+                // bind off event to hide
                 $(this).off(options.on);
                 $("#" + id + " > svg").css("pointer-events", " none");
             });
 
+            // bind events to hide jquery coachy
             return this.each(function () {
                 var o = options;
                 var obj = $(this);
-                obj.bind(o.off, function (e) {
-                    obj.css('z-index', obj.attr('data-z-index'));
-                    $("#" + id).remove();
-                });
-
+                // if an "off" event is passed
+                if (options.off) {
+                    obj.bind(o.off, function (e) {
+                        if (o.bringToFront) {
+                            obj.css('z-index', obj.attr('data-z-index'));
+                        }
+                        $("#" + id).remove();
+                    });
+                }
+                // to close Coachy on ESC Key
                 $(document).bind("keypress", function (e) {
                     var code = (e.keyCode ? e.keyCode : e.which);
                     if (code == 27) {
