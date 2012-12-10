@@ -113,14 +113,16 @@
         return { x: xRet, y: yRet };
     };
 
+
+    // BEGIN jQuery Coachy Plugin
     $.fn.extend({
         coachy: function (options) {
             // UID for jQueryCoachy
             var id = "__jquerycoachy__" + parseInt(Math.random() * 10);
             // defaults:
             var defaults = {
-                on: "customEventIn",
-                off: "customEventOut",
+                on: "showCoachy",
+                off: "hideCoachy",
                 arrow: {
                     x1: $(window).width() / 2,
                     y1: $(window).height() / 2
@@ -131,20 +133,20 @@
                 message: "jQuery Coachy!",
                 bringToFront: true, // bring element to front with z-index
                 autoOpen: false,
-                life: 0 // 0(ms) => stays forever
+                life: 0, // 0(ms) => stays forever
+                onlyOnce: false // handler runs once then removes itself
             };
             //options extend defaults
             var options = $.extend(defaults, options);
             //reference to plugin:
             var plugin = this;
+            plugin.options = options;
 
-
-            // Coachy is binded to the elements
-
-            // bind event to show coachy on "option.on events" on elements
-            $(document).on(options.on, this.selector, function () {
-                var x1 = options.arrow.x1,
-                    y1 = options.arrow.y1;
+            // Coachy methods
+            var showCoachy = function() {
+                var options = this.options;
+                var x1 = this.options.arrow.x1,
+                    y1 = this.options.arrow.y1;
                 var windowX = $(window).width();
                 var windowY = $(window).height();
                 // coachy div
@@ -189,7 +191,10 @@
                 });
 
                 // unbind on event
-                $(this).off(options.on);
+                if(options.onlyOnce)
+                    $(this).off(options.on);
+
+                // ??
                 $("#" + id + " > svg").css("pointer-events", " none");
 
                 // has limited lifetime?
@@ -197,19 +202,24 @@
                     console.log('has lifetime:'+options.life);
                     var $plugin = $(this);
                     // autoHide clear function: cleartimeout so that it doesnt conflict with other dispatches of the "off" event
-                    var autoHideClear = function () {
-                        console.log('autoHideClear!');
+                    var clearAutoHide = function () {
+                        console.log('clearAutoHide!');
                         clearTimeout(autoHideTO);
-                        $plugin.off(options.off, autoHideClear);
+                        $plugin.off(options.off, clearAutoHide);
                     }
-                    // clear lifetime layout 
-                    $plugin.on(options.off, autoHideClear);
+                    // set method to clear the timeout to autoHide when the "off" evento is dispatched
+                    $plugin.on(options.off, clearAutoHide);
                     // setTimeout to hide when lifetime runs out
                     var autoHideTO = setTimeout(function () {
                         console.log('autoHideTimeOut called!');
                         $plugin.trigger(options.off)
                     },options.life)
                 }
+            }
+
+            // bind event to show coachy on "option.on events" on elements
+            $(this).on(options.on, function () {
+                showCoachy.call(plugin);
             });
 
             // autoOpen?
