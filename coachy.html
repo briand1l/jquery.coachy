@@ -5,38 +5,26 @@
 		<script type="text/javascript" src="jquery.coachy.js"></script>
 		<script>
 		    $(function () {
-		        $(".hasCoach1").coachy({
+		        $(".hasCoach").coachy({
 		            on: "mouseover",
 		            off: "mouseout",
+		            selector: '.hasCoach2'
+		        });
+		        $.coachy({
+		            //on: "mouseover",
+		            //off: "mouseout",
 		            autoOpen: true,
                     life:3000,
-		            message: "If you click there you'll see",
-		            theme: "white",
-		            arrow: {
-		                x1: $(window).width() / 2,
-		                y1: $(window).height() / 2
-		                //x2: 30,
-		                //y2: 30 
-		            },
-		            zindex:99
+                    message: "If you click there you'll see",
+                    selector: '.hasCoach2'
 		        });
-		        /*
-				 $("#test").coachy({
-				 on: "custom",
-				 off: "mouseout",
-				 arrow: {
-				 x1: 345,
-				 y1: 100,
-				 x2: 50,
-				 y2: 50
-				 },
-				 message: "This is a coach message"
-				 });
-				 */
-
-		        //setTimeout( function() {
-		        //	$('#test').trigger("custom");
-		        //},200);
+		        //$(".hasCoach2").coachy({
+		        //    autoOpen: true,
+		        //    life: 3000,
+		        //    message: "",
+		        //    modal:false
+		        //});
+		        
 		    });
 		</script>
         <style>
@@ -50,7 +38,7 @@
                 display:inline-block;
                 width:50%;
                 height:100%;
-                background-color:#0026ff;
+                background-color:#ccc;
             }
             
         </style>
@@ -59,10 +47,10 @@
 		<div class="hasCoach" style="background-color:#ffd800;width:250px;position:absolute;top:10px;left:50px;height:200px;">
 			<span>Hover here</span>
 		</div>
-        <div class="hasCoach" style="background-color:#ffd800;width:250px;position:absolute;top:80%;left:50px;">
+        <div class="hasCoach2" style="background-color:#ffd800;width:250px;position:absolute;top:80%;left:50px;">
 			<span>Hover here</span>
 		</div>
-        <div class="hasCoach" style="background-color:#ffd800;width:250px;position:absolute;top:10px;left:48%;">
+        <div class="hasCoach2" style="background-color:#ffd800;width:250px;position:absolute;top:10px;left:48%;">
 			<span>Hover here</span>
 		</div>
          <div class="hasCoach" style="background-color:#ffd800;width:250px;position:absolute;top:45%;left:10px;height:200px;">

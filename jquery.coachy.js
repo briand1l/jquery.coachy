@@ -115,10 +115,10 @@
 
 
     // BEGIN jQuery Coachy Plugin
-    $.fn.extend({
-        coachy: function (options) {
-            // UID for jQueryCoachy
-            var id = "__jquerycoachy__" + parseInt(Math.random() * 10);
+    $.fn.coachy = function (options) {
+            //=============================================================
+            // DEFINITIONS:
+            //__________
             // defaults:
             var defaults = {
                 on: "showCoachy",
@@ -127,127 +127,168 @@
                     x1: $(window).width() / 2,
                     y1: $(window).height() / 2
                 },
-                zindex: "-999999",
+                zindex: "999",
                 opacity: 0.8,
+                modal: true,
                 theme: "white",
-                message: "jQuery Coachy!",
+                arrowHeadSize: 4,
+                tailDotSize: 2,
+                message: "Welcome to jQuery Coachy",
                 bringToFront: true, // bring element to front with z-index
                 autoOpen: false,
                 life: 0, // 0(ms) => stays forever
-                onlyOnce: false // handler runs once then removes itself
+                onlyOnce: false, // handler runs once then removes itself
+                selector: '' // extra selector, elements matched here will have and arrow pointing to them too
             };
             //options extend defaults
             var options = $.extend(defaults, options);
-            //reference to plugin:
-            var plugin = this;
-            plugin.options = options;
-
-            // Coachy methods
-            var showCoachy = function() {
-                var options = this.options;
-                var x1 = this.options.arrow.x1,
-                    y1 = this.options.arrow.y1;
-                var windowX = $(window).width();
-                var windowY = $(window).height();
-                // coachy div
-                var div = $("<div />").attr("id", id);
-                div.css({
-                    "position": "absolute",
-                    "top": 0,
-                    "left": 0,
-                    "z-index": options.zindex,
-                    "background": options.theme == "white" ? "black" : "white",
-                    "opacity": 0,
-                    "pointer-events": " none"
-                });
-                //injected
-                $("body").append(div);
-                //fadeIn
-                div.data('initialopacity',div.css('opacity')).stop().animate({ opacity: options.opacity }, 500);
-
-                var $elm = $(this);
-                if (options.bringToFront) {
-                    $elm.attr('data-z-index', $elm.css('z-index'));
-                    $elm.css('z-index', options.zindex + 10);
-                }
-                // raphaelJS canvas
-                var paper = new Raphael(document.getElementById(id), windowX, windowY);
-                //draw arrow
-                var finalArrow = paper.arrowForElement(
-                    /*arrow*/{ x: x1, y: y1 },
-                    /*elementBox*/$elm,
-                    5, options.theme);
-
-                // text optimal offset
-                var offsetX = (x1 < finalArrow.finalX) ? offsetX = -30 : offsetX = 30;
-                var offsetY = (y1 < finalArrow.finalY) ? offsetY = -30 : offsetY = 30;
-
-                // show text
-                paper.text(x1 + offsetX, y1 + offsetY, options.message).attr({
-                    font: "Helvetica",
-                    "font-size": "25px",
-                    stroke: options.theme,
-                    fill: options.theme
-                });
-
-                // unbind on event
-                if(options.onlyOnce)
-                    $(this).off(options.on);
-
-                // ??
-                $("#" + id + " > svg").css("pointer-events", " none");
-
-                // has limited lifetime?
-                if (options.life > 0) {
-                    console.log('has lifetime:'+options.life);
-                    var $plugin = $(this);
-                    // autoHide clear function: cleartimeout so that it doesnt conflict with other dispatches of the "off" event
-                    var clearAutoHide = function () {
-                        console.log('clearAutoHide!');
-                        clearTimeout(autoHideTO);
-                        $plugin.off(options.off, clearAutoHide);
-                    }
-                    // set method to clear the timeout to autoHide when the "off" evento is dispatched
-                    $plugin.on(options.off, clearAutoHide);
-                    // setTimeout to hide when lifetime runs out
-                    var autoHideTO = setTimeout(function () {
-                        console.log('autoHideTimeOut called!');
-                        $plugin.trigger(options.off)
-                    },options.life)
-                }
-            }
-
-            // bind event to show coachy on "option.on events" on elements
-            $(this).on(options.on, function () {
-                showCoachy.call(plugin);
-            });
-
-            // autoOpen?
-            if (options.autoOpen) {
-                this.trigger(options.on);
-            }
-
+        
+            // ______
             // return
             return this.each(function () {
-                var o = options;
-                var obj = $(this);
-                obj.on(o.off, function (e) {
-                    $("#" + id).stop().animate({ opacity: $("#" + id).data('initialopacity') }, 500, function () {
-                        if (o.bringToFront) {
-                            obj.css('z-index', obj.attr('data-z-index'));
-                        }
-                        $(this).remove();
+                // UID for each jQueryCoachy
+                var id = "__jquerycoachy__" + parseInt((new Date()).getTime() + (Math.random() * 10));
+                //___________________
+                // attaching handlers
+                $(this).on(options.on, function () {
+                        showCoachy.call(this, id, options);
                     });
-                    
-                });
-                // to close Coachy on ESC Key
-                $(document).bind("keypress", function (e) {
-                    var code = (e.keyCode ? e.keyCode : e.which);
-                    if (code == 27) {
-                        $("#" + id).remove();
-                    }
-                })
+                $(this).on(options.off, function () {
+                        hideCoachy.call(this, id, options);
+                    });
+
+                //__________
+                // autoOpen?
+                if (options.autoOpen) {
+                    showCoachy.call(this, id, options);
+                }
             });
+        };
+
+
+    //=============================================================
+    // METHODS
+    //____________
+    // show method
+    function showCoachy(id,options,raphaelPaper) {
+        var x1 = options.arrow.x1,
+            y1 = options.arrow.y1;
+        var windowX = $(window).width();
+        var windowY = $(window).height();
+        // element
+        var $elm = $(this);
+        // bring element to Front
+        if (options.bringToFront) {
+            $elm.attr('data-z-index', $elm.css('z-index'));
+            $elm.css('z-index', options.zindex + 10);
         }
-    });
+
+        // Create coachy div
+        // if a raphaelJSPaper is passed, it doesnt need to be created
+        if (raphaelPaper == undefined) {
+            $('#' + id).remove();
+            var div = $("<div />").attr("id", id).attr('class','jQueryCoachy');
+            div.css({
+                "position": "absolute",
+                "top": 0,
+                "left": 0,
+                "z-index": options.zindex,
+                "background": options.modal ? (options.theme == "white" ? "black" : "white") : "none",
+                "opacity": 0,
+                "pointer-events": " none"
+            });
+            //injected
+            $("body").append(div);
+            //fadeIn
+            div.data('initialopacity', div.css('opacity')).stop().animate({ opacity: options.opacity }, 500);
+
+            // to close Coachy on ESC Key
+            $(document).on("keydown", coachyEscHandler);
+
+            // raphaelJS canvas
+            var paper = Raphael(document.getElementById(id), windowX, windowY);
+            // circle on center
+            paper.circle(x1, y1, options.tailDotSize).attr({ "fill": options.theme, "stroke": options.theme, "stroke-width": "1px" });
+        } else {
+            var paper = raphaelPaper;
+        }
+        
+        //draw arrow
+        var finalArrow = paper.arrowForElement(
+            /*arrow*/{ x: x1, y: y1 },
+            /*elementBox*/$elm,
+            options.arrowHeadSize, options.theme);
+
+        // text optimal offset
+        var offsetText = 30; // offsets text this ammount of pixels up or down depending on arrow final position
+        var offsetX = (x1 < finalArrow.finalX) ? offsetX = -offsetText : offsetX = offsetText;
+        var offsetY = (y1 < finalArrow.finalY) ? offsetY = -offsetText : offsetY = offsetText;
+
+        // show main text
+        paper.text(x1 + offsetX, y1 + offsetY, options.message).attr({
+            font: "Helvetica",
+            "font-size": "25px",
+            stroke: options.theme,
+            fill: options.theme
+        });
+
+        // unbind on event
+        if (options.onlyOnce)
+            $(this).off(options.on);
+
+        // mouse events on svg is set to none, on interaction with svgs
+        $("#" + id + " > svg").css("pointer-events", " none");
+
+        // has extra selector?
+        if (options.selector != '')
+            $(options.selector).each(function () {
+                showCoachy.call(this, id,
+                     $.extend(
+                        // copy of options:
+                        $.extend({}, options),
+                        // overriding params because those ate extra coachmarks
+                        { modal: false, message: '', selector: '',autoOpen:true }
+                        ),
+                        paper // flag that it's a secondary arrow
+                    );
+            });
+
+        // has limited lifetime?
+        if (options.life > 0) {
+            var element = this;
+            // autoHide clear function: cleartimeout so that it doesnt conflict with other dispatches of the "off" event
+            var clearAutoHide = function () {
+                clearTimeout(autoHideTO);
+                hideCoachy.call(element, id,options);
+                $(element).off(options.off, clearAutoHide);
+            }
+            // set method to clear the timeout to autoHide when the "off" event is dispatched
+            $(element).on(options.off, clearAutoHide);
+            // setTimeout to hide when lifetime runs out
+            var autoHideTO = setTimeout(function () {
+                hideCoachy.call(element, id,options);
+            }, options.life)
+        }
+    }
+    //____________
+    // hide method
+    function hideCoachy(id,options) {
+        var element = this;
+        $("#" + id).stop().animate({ opacity: $("#" + id).data('initialopacity') }, 500, function () {
+            if (options.bringToFront) {
+                $(element).css('z-index', $(element).attr('data-z-index'));
+            }
+            $(this).remove();
+        });
+        // clear close Coachy on ESC Key
+        $(document).off("keypress", coachyEscHandler);
+    };
+
+    function coachyEscHandler(e) {    
+        var code = (e.keyCode ? e.keyCode : e.which);
+        if (code == 27) {
+            $(".jQueryCoachy").remove();
+        }
+    }
+
 })(jQuery);
